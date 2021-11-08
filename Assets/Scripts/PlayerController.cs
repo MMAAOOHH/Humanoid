@@ -13,12 +13,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float moveSpeed = 10f;
     [SerializeField] private float rotationSpeed = 10f;
 
-    private int playerHealth = 100;
+    private MeshRenderer playerRenderer;
+
+    private int playerHealth = 5;
     
     private void Start()
     {
         cam = Camera.main;
         rb = GetComponent<Rigidbody>();
+        playerRenderer = GetComponent<MeshRenderer>();
     }
 
     private void Update()
@@ -43,6 +46,16 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(int damage)
     {
         playerHealth -= damage;
+        if (playerHealth<= 0)
+        {
+           PlayerDeath();
+        }
+    }
+
+    private void PlayerDeath()
+    {
+        FindObjectOfType<GameManager>().PlayerDeath();
+        Destroy(gameObject);
     }
 }
 
