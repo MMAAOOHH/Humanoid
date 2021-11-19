@@ -1,30 +1,30 @@
-using System;
-using System.Drawing;
 using UnityEngine;
-using Random = UnityEngine.Random;
 public class AsteroidController : MonoBehaviour
 {
     public AsteroidController asteroidPrefab;
-    [SerializeField] private int numberToSpawn = 4;
-    [SerializeField] private float instanceRadius = 2f;
-    
-    private Rigidbody rb;
-    [SerializeField] private float moveSpeed = 15f;
+
+    [SerializeField] private int _newAsteroidsToSpawn = 4;
+    [SerializeField] private float _spawnRadius = 2f;
+    [SerializeField] private float _moveSpeed = 15f;
     
     public float size = 1f;
     public float maxSize = 2f;
     public float minSize = 0.5f;
-    private float health = 1f;
+    
+    private float _health = 1f;
+    private Rigidbody _rb;
     
     private void Awake()
     { 
-        rb = GetComponent<Rigidbody>();
+        _rb = GetComponent<Rigidbody>();
     }
 
     private void Start()
     {
+        FindObjectOfType<GameManager>().asteroidsInSceneList.Add(gameObject);
+        
         transform.localScale = Vector3.one * size;
-        rb.mass = size;
+        _rb.mass = size;
     }
 
     private void OnCollisionEnter(Collision other)
@@ -32,45 +32,45 @@ public class AsteroidController : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             other.gameObject.GetComponent<PlayerController>().TakeDamage(1);
+            TakeDamage(1);
         }
     }
-
-
+    
     public void TakeDamage(int damage)
     {
-        health -= damage;
+        _health -= damage;
         FindObjectOfType<AudioManager>().Play("Hit");
         FindObjectOfType<GameManager>().Score(1);
 
-        if (health == 0)
+        if (_health == 0)
         {
             if (size * 0.5 > minSize)
             {
-                InstanceCircle(numberToSpawn);
+                InstanceCircle(_newAsteroidsToSpawn);
             }
             Destroy(gameObject);
         }
     }
-
+    
+    public void Trajectory(Vector3 direction)
+    {
+        _rb.AddForce(direction  * _moveSpeed, ForceMode.Force);
+    }
+    
     private void InstanceCircle(int numberOfObjects)
     {
         for (int i = 0; i < numberOfObjects; i++)
         {
             float angle = i * Mathf.PI * 2 / numberOfObjects;
-            float x = Mathf.Cos(angle) * instanceRadius;
-            float z = Mathf.Sin(angle) * instanceRadius;
+            float x = Mathf.Cos(angle) * _spawnRadius;
+            float z = Mathf.Sin(angle) * _spawnRadius;
             Vector3 pos = transform.position + new Vector3(x, 0, z);
             float angleDegrees = -angle * Mathf.Rad2Deg;
             Quaternion rot = Quaternion.Euler(0, angleDegrees, 0);
             
             AsteroidController newAsteroid = Instantiate(asteroidPrefab, pos, rot);
             newAsteroid.size = size * 0.5f;
-            newAsteroid.Trajectory(newAsteroid.transform.right * moveSpeed);
+            newAsteroid.Trajectory(newAsteroid.transform.right * _moveSpeed);
         }
-    }
-
-    public void Trajectory(Vector3 direction)
-    {
-        rb.AddForce(direction  * moveSpeed, ForceMode.Force);
     }
 }
